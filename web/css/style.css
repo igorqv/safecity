@@ -1,0 +1,353 @@
+/* ============================================================
+   SafeCity SP — Estilos do Dashboard
+   Tema escuro: transmite seriedade para um dashboard de segurança pública.
+   Layout responsivo usando CSS Grid — sem frameworks, sem build step.
+   ============================================================ */
+
+/* ── Reset e variáveis ────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* Paleta de cores — mesma usada nos gráficos Plotly (COLORS em dashboard.js) */
+  --color-primary:    #E63946;   /* vermelho: crimes, urgência */
+  --color-secondary:  #457B9D;   /* azul: furtos, comparativo */
+  --color-tertiary:   #2A9D8F;   /* verde-azul: positivo / queda */
+  --color-warning:    #E9C46A;   /* amarelo: alerta */
+  --color-dark:       #264653;   /* cinza-escuro: neutro */
+
+  /* Backgrounds */
+  --bg-page:    #0f172a;         /* fundo geral — azul marinho escuro */
+  --bg-card:    #1e293b;         /* cards e charts */
+  --bg-header:  #0a1628;         /* header principal */
+
+  /* Textos */
+  --text-primary:   #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted:     #64748b;
+
+  /* Bordas */
+  --border:     1px solid #334155;
+
+  /* Espaçamentos */
+  --gap:        1.25rem;
+  --radius:     0.75rem;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.site-header {
+  background: var(--bg-header);
+  border-bottom: var(--border);
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.site-header h1 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.site-header h1 span.badge {
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.header-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ── Filtros ─────────────────────────────────────────────────────────────── */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.filter-group label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.filter-group select {
+  background: #0f172a;
+  color: var(--text-primary);
+  border: var(--border);
+  border-radius: 0.4rem;
+  padding: 0.35rem 2rem 0.35rem 0.6rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  appearance: none;
+  /* Seta customizada */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+}
+
+.filter-group select:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ── Layout principal ────────────────────────────────────────────────────── */
+.dashboard {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--gap);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+/* ── KPI Cards ───────────────────────────────────────────────────────────── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--gap);
+}
+
+.kpi-card {
+  background: var(--bg-card);
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.kpi-card .label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.kpi-card .value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.kpi-card .sub {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+/* Cores específicas por card */
+.kpi-card.total   .value { color: var(--text-primary); }
+.kpi-card.furto   .value { color: var(--color-secondary); }
+.kpi-card.roubo   .value { color: var(--color-primary); }
+.kpi-card.yoy.up   .value { color: var(--color-primary); }   /* aumento = ruim */
+.kpi-card.yoy.down .value { color: var(--color-tertiary); }  /* queda = bom */
+
+/* ── Grid de gráficos ────────────────────────────────────────────────────── */
+.chart-row {
+  display: grid;
+  gap: var(--gap);
+}
+
+/* Linha de dois gráficos iguais */
+.chart-row.cols-2 { grid-template-columns: 1fr 1fr; }
+
+/* Linha com gráfico grande + pequeno (2:1) */
+.chart-row.cols-2-1 { grid-template-columns: 2fr 1fr; }
+
+/* Linha única — gráfico full-width */
+.chart-row.cols-1 { grid-template-columns: 1fr; }
+
+.chart-card {
+  background: var(--bg-card);
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 320px;
+}
+
+.chart-card h2 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Div que contém o Plotly — precisa de flex-grow para preencher o card */
+.chart-card .plot-container {
+  flex: 1;
+  min-height: 260px;
+}
+
+/* ── Tabela de ranking ───────────────────────────────────────────────────── */
+.ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.ranking-table th {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: var(--border);
+}
+
+.ranking-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #1e293b;
+  color: var(--text-primary);
+}
+
+.ranking-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+
+.ranking-table .rank-num {
+  color: var(--text-muted);
+  font-weight: 700;
+  width: 2rem;
+}
+
+.ranking-table .total-val {
+  text-align: right;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+/* Barra de progresso na tabela */
+.bar-bg {
+  background: #334155;
+  border-radius: 999px;
+  height: 5px;
+  flex: 1;
+  min-width: 60px;
+}
+
+.bar-fill {
+  background: var(--color-primary);
+  border-radius: 999px;
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.table-row-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ── Scroll interno para tabelas ─────────────────────────────────────────── */
+.table-scroll {
+  max-height: 320px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #334155 transparent;
+}
+
+/* ── Loading / Error states ──────────────────────────────────────────────── */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-page);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  z-index: 9999;
+}
+
+.loading-overlay.hidden { display: none; }
+
+.spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid #334155;
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-overlay p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.error-banner {
+  display: none;
+  background: #7f1d1d;
+  color: #fca5a5;
+  border: 1px solid #991b1b;
+  border-radius: var(--radius);
+  padding: 1rem 1.5rem;
+  font-size: 0.875rem;
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────────── */
+.site-footer {
+  text-align: center;
+  padding: 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  border-top: var(--border);
+  margin-top: var(--gap);
+}
+
+.site-footer a { color: var(--color-secondary); text-decoration: none; }
+.site-footer a:hover { text-decoration: underline; }
+
+/* ── Responsividade ─────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .chart-row.cols-2-1 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .chart-row.cols-2 { grid-template-columns: 1fr; }
+  .site-header { flex-direction: column; align-items: flex-start; }
+}

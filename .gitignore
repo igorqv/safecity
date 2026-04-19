@@ -1,0 +1,42 @@
+# Credenciais — nunca commitar
+.env
+*.env
+
+# Dados brutos SSP-SP — arquivos grandes, não entram no repo
+raw/
+
+# Checkpoints Parquet gerados pelo pipeline
+parquet/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Java / Spark
+*.jar
+.ivy2/
+spark-warehouse/
+derby.log
+metastore_db/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Temporários Excel (arquivos travados no Windows)
+~$*.xlsx
+
+# claude
+.claude/
+
+#prd
+.prd/

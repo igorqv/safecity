@@ -56,8 +56,8 @@ services:
       - ./spark:/app/spark:ro
 
     # Comando padrão executado ao iniciar o container
-    # Roda o pipeline completo (ingest → clean → compute_kpis → load_supabase)
-    command: ["python", "run_pipeline.py"]
+    # Mantém o container rodando para executar comandos manualmente via docker-compose exec
+    command: ["tail", "-f", "/dev/null"]
 
     # Política de restart
     # on-failure: reiniciar só se o container saiu com código != 0

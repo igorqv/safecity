@@ -1,0 +1,26 @@
+# SafeCity SP — Dependências do Pipeline PySpark
+#
+# IMPORTANTE: PySpark 3.5.x suporta oficialmente Python 3.8–3.11.
+# Recomenda-se usar Python 3.11 via pyenv ou conda para evitar incompatibilidades.
+# Instalar: pip install -r requirements.txt
+#
+# Pré-requisito de sistema: Java 11 ou 17 (necessário para o Spark)
+# Windows: https://adoptium.net/temurin/releases/
+# Verificar: java -version
+
+# ── Processamento de dados ────────────────────────────────────────────────────
+pyspark==3.5.1          # Motor de processamento distribuído
+pandas==2.2.2           # Leitura de xlsx e conversão para Spark DF
+openpyxl==3.1.2         # Engine do pandas para ler .xlsx (já instalado)
+pyarrow==16.0.0         # Suporte para leitura/escrita de Parquet via pandas
+numpy==1.26.4           # Dependência do pandas
+
+# ── Banco de dados ────────────────────────────────────────────────────────────
+# Usamos o cliente oficial Supabase (REST API via httpx) para carregar os KPIs.
+# MOTIVO: evita psycopg2-binary que não tem wheel para Python 3.14+.
+# O supabase-py usa httpx internamente — puro Python, funciona em qualquer versão.
+supabase==2.9.1         # Cliente Python do Supabase (REST API)
+
+# ── Utilitários ───────────────────────────────────────────────────────────────
+python-dotenv==1.0.1    # Carrega variáveis do arquivo .env
+tqdm==4.66.4            # Barra de progresso para o pipeline

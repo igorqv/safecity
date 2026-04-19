@@ -10,6 +10,7 @@ Uso:
   python spark/run_pipeline_yearly.py 2017 2018    # Processa 2017 e 2018
 """
 
+import os
 import sys
 import time
 import subprocess
@@ -59,7 +60,7 @@ def executar_etapa(ano: int, nome: str, script: str, descricao: str) -> bool:
     resultado = subprocess.run(
         [sys.executable, str(caminho_script)],
         cwd=str(Path(__file__).parent),
-        env={**dict(os.environ), **env} if 'os' in dir() else env,
+        env={**dict(os.environ), **env},
     )
 
     duracao = time.time() - inicio
@@ -166,5 +167,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    import os
     main()
