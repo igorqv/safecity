@@ -1,0 +1,62 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# .dockerignore — Arquivos que NÃO entram na build Docker
+#
+# Reduz tamanho do build context e acelera COPY/build
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Git
+.git
+.gitignore
+.github
+
+# Node/npm
+node_modules
+package.json
+package-lock.json
+yarn.lock
+
+# Python cache e build
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info
+dist/
+build/
+
+# Virtual environments (não entram — instalar no container)
+venv/
+.venv/
+env/
+ENV/
+
+# Dados brutos (muito grandes, mapeados via volume)
+raw/
+parquet/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentação (não necessária no container)
+*.md
+docs/
+
+# Este próprio arquivo
+.dockerignore
+Dockerfile.dev
+
+# Supabase local (se usar docker-compose-dev)
+supabase/
+
+# Arquivos temporários
+*.tmp
+*.log

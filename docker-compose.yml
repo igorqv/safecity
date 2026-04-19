@@ -1,0 +1,99 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# SafeCity SP — Docker Compose para Pipeline PySpark
+#
+# Uso:
+#   docker-compose up                    # Executa pipeline completo
+#   docker-compose run safecity python ingest.py  # Executa só uma etapa
+#   docker-compose down --volumes        # Remove containers + volumes
+#
+# Arquitetura:
+#   - Service 'safecity-pipeline' com Python 3.11 + Spark
+#   - Volumes mapeados para raw/ e parquet/ (persistent)
+#   - Variáveis de ambiente carregadas de .env
+# ──────────────────────────────────────────────────────────────────────────────
+
+version: '3.8'
+
+services:
+  safecity-pipeline:
+    # Build a partir do Dockerfile local
+    build:
+      context: .
+      dockerfile: ./spark/Dockerfile
+
+    # Nome do container para fácil referência
+    container_name: safecity-pipeline
+
+    # Passar variáveis de ambiente do arquivo .env para o container
+    env_file:
+      - .env
+
+    # Variáveis de ambiente adicionais (podem sobrescrever .env)
+    environment:
+      # Garantir que Python escreve output imediatamente (sem buffer)
+      # Útil para ver logs do Spark em tempo real via docker logs
+      PYTHONUNBUFFERED: "1"
+
+      # Configuração Spark otimizada para container
+      # Reduzir partições padrão (200 é excessivo para máquina local)
+      SPARK_CONF_SPARK_SHUFFLE_PARTITIONS: "8"
+
+    # Volumes mapeados:
+    # 1. raw/          -> dados brutos da SSP-SP (leitura)
+    # 2. parquet/      -> checkpoints do pipeline (escrita)
+    # 3. spark/ (opt)  -> código-fonte (facilita debug)
+    volumes:
+      # Mapa: <caminho-host>:<caminho-container>:<modo>
+      # Modo: ro=read-only, rw=read-write (default)
+
+      # Dados brutos SSP-SP (apenas leitura, não modificar)
+      - ./raw:/app/raw:ro
+
+      # Checkpoints Parquet (escrita, persistir após container encerrar)
+      - ./parquet:/app/parquet:rw
+
+      # Código-fonte (opcional — permite debug e reloading)
+      - ./spark:/app/spark:ro
+
+    # Comando padrão executado ao iniciar o container
+    # Roda o pipeline completo (ingest → clean → compute_kpis → load_supabase)
+    command: ["python", "run_pipeline.py"]
+
+    # Política de restart
+    # on-failure: reiniciar só se o container saiu com código != 0
+    # max-retries: tentar 3 vezes antes de desistir
+    restart: on-failure:3
+
+    # Logs driver
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"      # Rotacionar log quando atingir 100MB
+        max-file: "3"         # Manter até 3 arquivos de log
+
+    # Labels para organização
+    labels:
+      project: "safecity-sp"
+      component: "etl-pipeline"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Volumes nomeados (persistem entre container restarts)
+# ──────────────────────────────────────────────────────────────────────────────
+
+volumes:
+  # Opcional: usar volumes nomeados em vez de bind mounts
+  # Descomentar se preferir gerenciamento pelo Docker
+  # parquet_data:
+  #   driver: local
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Networks (padrão: bridge)
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Usamos a network padrão do docker-compose. Quando escalar para múltiplos
+# serviços (ex: Supabase local, Postgres, etc.), criar uma rede customizada.
+
+networks:
+  default:
+    name: safecity-network
+    driver: bridge
