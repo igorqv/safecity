@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SafeCity SP — Teste com Dados Mock</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+  <link rel="stylesheet" href="css/style.css" />
+
+  <script>
+    // Dados mock para teste
+    window.MOCK_DATA = {
+      annual: [
+        { ano: 2017, total_ocorrencias: 521711, total_furtos: 312000, total_roubos: 209711, variacao_yoy: null },
+        { ano: 2018, total_ocorrencias: 493586, total_furtos: 285000, total_roubos: 208586, variacao_yoy: -5.4 },
+        { ano: 2019, total_ocorrencias: 518325, total_furtos: 310000, total_roubos: 208325, variacao_yoy: 5.0 },
+        { ano: 2020, total_ocorrencias: 373035, total_furtos: 215000, total_roubos: 158035, variacao_yoy: -28.1 },
+        { ano: 2021, total_ocorrencias: 392244, total_furtos: 228000, total_roubos: 164244, variacao_yoy: 5.1 },
+        { ano: 2022, total_ocorrencias: 442730, total_furtos: 258000, total_roubos: 184730, variacao_yoy: 12.8 },
+        { ano: 2023, total_ocorrencias: 490154, total_furtos: 285000, total_roubos: 205154, variacao_yoy: 10.7 },
+        { ano: 2024, total_ocorrencias: 465800, total_furtos: 270000, total_roubos: 195800, variacao_yoy: -4.9 },
+        { ano: 2025, total_ocorrencias: 380000, total_furtos: 220000, total_roubos: 160000, variacao_yoy: -18.4 },
+        { ano: 2026, total_ocorrencias: 128000, total_furtos: 75000, total_roubos: 53000, variacao_yoy: -66.3 }
+      ],
+      monthly: [
+        { ano: 2024, mes: 1, tipo_crime: 'Furto', total_ocorrencias: 21500 },
+        { ano: 2024, mes: 1, tipo_crime: 'Roubo', total_ocorrencias: 15800 },
+        { ano: 2024, mes: 2, tipo_crime: 'Furto', total_ocorrencias: 20000 },
+        { ano: 2024, mes: 2, tipo_crime: 'Roubo', total_ocorrencias: 15200 },
+        { ano: 2024, mes: 3, tipo_crime: 'Furto', total_ocorrencias: 23000 },
+        { ano: 2024, mes: 3, tipo_crime: 'Roubo', total_ocorrencias: 16800 },
+        { ano: 2024, mes: 4, tipo_crime: 'Furto', total_ocorrencias: 19500 },
+        { ano: 2024, mes: 4, tipo_crime: 'Roubo', total_ocorrencias: 14200 },
+        { ano: 2024, mes: 5, tipo_crime: 'Furto', total_ocorrencias: 22000 },
+        { ano: 2024, mes: 5, tipo_crime: 'Roubo', total_ocorrencias: 16000 },
+        { ano: 2024, mes: 6, tipo_crime: 'Furto', total_ocorrencias: 21000 },
+        { ano: 2024, mes: 6, tipo_crime: 'Roubo', total_ocorrencias: 15300 },
+        { ano: 2024, mes: 7, tipo_crime: 'Furto', total_ocorrencias: 24000 },
+        { ano: 2024, mes: 7, tipo_crime: 'Roubo', total_ocorrencias: 17500 },
+        { ano: 2024, mes: 8, tipo_crime: 'Furto', total_ocorrencias: 23500 },
+        { ano: 2024, mes: 8, tipo_crime: 'Roubo', total_ocorrencias: 17000 },
+        { ano: 2024, mes: 9, tipo_crime: 'Furto', total_ocorrencias: 20500 },
+        { ano: 2024, mes: 9, tipo_crime: 'Roubo', total_ocorrencias: 15000 },
+        { ano: 2024, mes: 10, tipo_crime: 'Furto', total_ocorrencias: 22500 },
+        { ano: 2024, mes: 10, tipo_crime: 'Roubo', total_ocorrencias: 16200 },
+        { ano: 2024, mes: 11, tipo_crime: 'Furto', total_ocorrencias: 21000 },
+        { ano: 2024, mes: 11, tipo_crime: 'Roubo', total_ocorrencias: 15300 },
+        { ano: 2024, mes: 12, tipo_crime: 'Furto', total_ocorrencias: 22000 },
+        { ano: 2024, mes: 12, tipo_crime: 'Roubo', total_ocorrencias: 15900 }
+      ],
+      municipality: [
+        { ano: 2024, municipio: 'S.PAULO', total_ocorrencias: 198000, tipo_crime: 'Furto' },
+        { ano: 2024, municipio: 'S.PAULO', total_ocorrencias: 145000, tipo_crime: 'Roubo' },
+        { ano: 2024, municipio: 'GUARULHOS', total_ocorrencias: 28500, tipo_crime: 'Furto' },
+        { ano: 2024, municipio: 'GUARULHOS', total_ocorrencias: 18200, tipo_crime: 'Roubo' },
+        { ano: 2024, municipio: 'SANTO ANDRE', total_ocorrencias: 18000, tipo_crime: 'Furto' },
+        { ano: 2024, municipio: 'SANTO ANDRE', total_ocorrencias: 12500, tipo_crime: 'Roubo' },
+        { ano: 2024, municipio: 'CAMPINAS', total_ocorrencias: 15200, tipo_crime: 'Furto' },
+        { ano: 2024, municipio: 'CAMPINAS', total_ocorrencias: 10800, tipo_crime: 'Roubo' }
+      ],
+      bairro: [
+        { ano: 2024, bairro: 'CENTRO', total_ocorrencias: 28500 },
+        { ano: 2024, bairro: 'ZONA LESTE', total_ocorrencias: 35000 },
+        { ano: 2024, bairro: 'ZONA OESTE', total_ocorrencias: 32000 },
+        { ano: 2024, bairro: 'ZONA SUL', total_ocorrencias: 41000 },
+        { ano: 2024, bairro: 'ZONA NORTE', total_ocorrencias: 38000 },
+        { ano: 2024, bairro: 'PINHEIROS', total_ocorrencias: 18500 },
+        { ano: 2024, bairro: 'VILA MADALENA', total_ocorrencias: 15200 }
+      ],
+      location: [
+        { ano: 2024, tipo_local: 'Via Pública', total_ocorrencias: 198000 },
+        { ano: 2024, tipo_local: 'Terminal/Estação', total_ocorrencias: 78000 },
+        { ano: 2024, tipo_local: 'Comércio', total_ocorrencias: 65000 },
+        { ano: 2024, tipo_local: 'Transporte Coletivo', total_ocorrencias: 52000 },
+        { ano: 2024, tipo_local: 'Residência', total_ocorrencias: 38000 },
+        { ano: 2024, tipo_local: 'Instituição', total_ocorrencias: 22000 },
+        { ano: 2024, tipo_local: 'Estacionamento', total_ocorrencias: 12800 }
+      ],
+      brand: [
+        { ano: 2024, marca: 'Samsung', total_ocorrencias: 128500 },
+        { ano: 2024, marca: 'Apple', total_ocorrencias: 95000 },
+        { ano: 2024, marca: 'Motorola', total_ocorrencias: 68000 },
+        { ano: 2024, marca: 'Xiaomi', total_ocorrencias: 52000 },
+        { ano: 2024, marca: 'LG', total_ocorrencias: 38000 },
+        { ano: 2024, marca: 'Positivo', total_ocorrencias: 28500 },
+        { ano: 2024, marca: 'Outras', total_ocorrencias: 65800 }
+      ],
+      hour: [
+        { ano: 2024, hora: 0, total_ocorrencias: 18500 },
+        { ano: 2024, hora: 1, total_ocorrencias: 12000 },
+        { ano: 2024, hora: 2, total_ocorrencias: 8500 },
+        { ano: 2024, hora: 3, total_ocorrencias: 6500 },
+        { ano: 2024, hora: 4, total_ocorrencias: 7000 },
+        { ano: 2024, hora: 5, total_ocorrencias: 9500 },
+        { ano: 2024, hora: 6, total_ocorrencias: 15000 },
+        { ano: 2024, hora: 7, total_ocorrencias: 22000 },
+        { ano: 2024, hora: 8, total_ocorrencias: 28500 },
+        { ano: 2024, hora: 9, total_ocorrencias: 31000 },
+        { ano: 2024, hora: 10, total_ocorrencias: 32500 },
+        { ano: 2024, hora: 11, total_ocorrencias: 30000 },
+        { ano: 2024, hora: 12, total_ocorrencias: 28000 },
+        { ano: 2024, hora: 13, total_ocorrencias: 29500 },
+        { ano: 2024, hora: 14, total_ocorrencias: 31000 },
+        { ano: 2024, hora: 15, total_ocorrencias: 32000 },
+        { ano: 2024, hora: 16, total_ocorrencias: 33500 },
+        { ano: 2024, hora: 17, total_ocorrencias: 35000 },
+        { ano: 2024, hora: 18, total_ocorrencias: 36000 },
+        { ano: 2024, hora: 19, total_ocorrencias: 34500 },
+        { ano: 2024, hora: 20, total_ocorrencias: 32000 },
+        { ano: 2024, hora: 21, total_ocorrencias: 28000 },
+        { ano: 2024, hora: 22, total_ocorrencias: 24000 },
+        { ano: 2024, hora: 23, total_ocorrencias: 20000 }
+      ],
+      period: [
+        { ano: 2024, periodo: 'Madrugada', total_ocorrencias: 62000 },
+        { ano: 2024, periodo: 'Manhã', total_ocorrencias: 98000 },
+        { ano: 2024, periodo: 'Tarde', total_ocorrencias: 135000 },
+        { ano: 2024, periodo: 'Noite', total_ocorrencias: 170800 }
+      ]
+    };
+  </script>
+</head>
+<body>
+
+  <div id="loading" class="loading-overlay hidden">
+    <div class="spinner"></div>
+    <p>Carregando dados...</p>
+  </div>
+
+  <header class="site-header">
+    <h1>
+      🔒 SafeCity SP
+      <span class="badge">Teste</span>
+    </h1>
+
+    <div class="filters">
+      <div class="filter-group">
+        <label for="filter-ano">Ano</label>
+        <select id="filter-ano">
+          <option value="">Todos os anos</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="filter-tipo">Tipo de crime</label>
+        <select id="filter-tipo">
+          <option value="">Furto + Roubo</option>
+          <option value="Furto">Furto</option>
+          <option value="Roubo">Roubo</option>
+        </select>
+      </div>
+    </div>
+
+    <span class="header-meta" id="meta-periodo">Dados: 2017–2026</span>
+  </header>
+
+  <div id="error-banner" class="error-banner" style="margin:1rem;"></div>
+
+  <main class="dashboard">
+
+    <section class="kpi-grid">
+      <div class="kpi-card total">
+        <span class="label">Total de Ocorrências</span>
+        <span class="value" id="kpi-total">—</span>
+        <span class="sub">Furtos + Roubos de celular</span>
+      </div>
+      <div class="kpi-card furto">
+        <span class="label">Furtos</span>
+        <span class="value" id="kpi-furto">—</span>
+        <span class="sub">Sem violência (art. 155)</span>
+      </div>
+      <div class="kpi-card roubo">
+        <span class="label">Roubos</span>
+        <span class="value" id="kpi-roubo">—</span>
+        <span class="sub">Com violência (art. 157)</span>
+      </div>
+      <div class="kpi-card yoy" id="card-yoy">
+        <span class="label">Variação YoY</span>
+        <span class="value" id="kpi-yoy">—</span>
+        <span class="sub">Vs. ano anterior</span>
+      </div>
+    </section>
+
+    <section class="chart-row cols-1">
+      <div class="chart-card">
+        <h2>Evolução Anual — Furto vs Roubo (2017–2026)</h2>
+        <div id="chart-anual" class="plot-container"></div>
+      </div>
+    </section>
+
+    <section class="chart-row cols-2-1">
+      <div class="chart-card">
+        <h2>Sazonalidade Mensal</h2>
+        <div id="chart-mensal" class="plot-container"></div>
+      </div>
+      <div class="chart-card">
+        <h2>Furto vs Roubo</h2>
+        <div id="chart-tipo" class="plot-container"></div>
+      </div>
+    </section>
+
+    <section class="chart-row cols-1">
+      <div class="chart-card">
+        <h2>Distribuição por Hora do Dia</h2>
+        <div id="chart-horario" class="plot-container"></div>
+      </div>
+    </section>
+
+    <section class="chart-row cols-2">
+      <div class="chart-card">
+        <h2>Top 10 Marcas de Celular Subtraídas</h2>
+        <div id="chart-marcas" class="plot-container"></div>
+      </div>
+      <div class="chart-card">
+        <h2>Top 8 Tipos de Local</h2>
+        <div id="chart-locais" class="plot-container"></div>
+      </div>
+    </section>
+
+    <section class="chart-row cols-2">
+      <div class="chart-card">
+        <h2>Top 20 Municípios com mais Ocorrências</h2>
+        <div class="table-scroll">
+          <table class="ranking-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Município</th>
+                <th>Ocorrências</th>
+              </tr>
+            </thead>
+            <tbody id="tabela-municipios">
+              <tr><td colspan="3" style="color:#64748b;padding:1rem;">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h2>Top 20 Bairros — São Paulo Capital</h2>
+        <div class="table-scroll">
+          <table class="ranking-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Bairro</th>
+                <th>Ocorrências</th>
+              </tr>
+            </thead>
+            <tbody id="tabela-bairros">
+              <tr><td colspan="3" style="color:#64748b;padding:1rem;">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <strong>⚠️ Página de Teste com Dados Mock</strong> — Para dados reais, aguarde a conclusão do pipeline PySpark.
+    </p>
+  </footer>
+
+  <script src="js/dashboard.js"></script>
+
+</body>
+</html>
