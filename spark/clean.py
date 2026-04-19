@@ -262,6 +262,12 @@ def main() -> None:
     total_bruto = df.count()
     print(f"Total de linhas brutas: {total_bruto:,}")
 
+    # Filtrar datas inválidas (antes de 1900) para evitar Spark datetime rebase error
+    # ao escrever Parquet. O Spark 3.0+ rejeita datas muito antigas por segurança.
+    df = df.filter(F.col("DATA_OCORRENCIA") >= F.lit("1900-01-01"))
+    total_valido = df.count()
+    print(f"Linhas após filtro de datas válidas: {total_valido:,} (-{total_bruto - total_valido:,} inválidas)")
+
     # Aplicar transformações em sequência — Spark é lazy,
     # todas as transformações são empilhadas e executadas juntas no write
     print("\nAplicando transformações...")
