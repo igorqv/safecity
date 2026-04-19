@@ -18,8 +18,8 @@ services:
   safecity-pipeline:
     # Build a partir do Dockerfile local
     build:
-      context: .
-      dockerfile: ./spark/Dockerfile
+      context: ./spark
+      dockerfile: Dockerfile
 
     # Nome do container para fácil referência
     container_name: safecity-pipeline
@@ -77,21 +77,8 @@ services:
       component: "etl-pipeline"
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Volumes nomeados (persistem entre container restarts)
-# ──────────────────────────────────────────────────────────────────────────────
-
-volumes:
-  # Opcional: usar volumes nomeados em vez de bind mounts
-  # Descomentar se preferir gerenciamento pelo Docker
-  # parquet_data:
-  #   driver: local
-
-# ──────────────────────────────────────────────────────────────────────────────
 # Networks (padrão: bridge)
 # ──────────────────────────────────────────────────────────────────────────────
-
-# Usamos a network padrão do docker-compose. Quando escalar para múltiplos
-# serviços (ex: Supabase local, Postgres, etc.), criar uma rede customizada.
 
 networks:
   default:
