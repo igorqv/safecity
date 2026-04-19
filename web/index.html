@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="SafeCity SP — Dashboard de roubos e furtos de celulares em São Paulo (2017–2026). Dados públicos da SSP-SP." />
+  <title>SafeCity SP — Roubos de Celulares</title>
+
+  <!-- Inter font — carregada do Google Fonts para tipografia limpa e legível -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Plotly.js via CDN com versão fixada — evita breaking changes silenciosos -->
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- Configuração do Supabase injetada aqui para que dashboard.js a leia via window.*
+       MOTIVO: centralizar credenciais em uma única linha facilita o deploy no Vercel
+               sem precisar de um bundler ou variáveis de ambiente no frontend.
+               A ANON KEY é pública por design — dados da SSP-SP são públicos por lei. -->
+  <script>
+    window.SUPABASE_URL = 'https://zrfwudsvrikfevlmigvo.supabase.co';
+    window.SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpyZnd1ZHN2cmlrZmV2bG1pZ3ZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1NjY4NjMsImV4cCI6MjA5MjE0Mjg2M30.8KQccMInaRcTiPKaFfM3jUrErBkgXclDLV6MvkkGyeo';
+  </script>
+</head>
+<body>
+
+  <!-- ── Loading overlay ──────────────────────────────────────────────────── -->
+  <div id="loading" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Carregando dados de segurança pública...</p>
+  </div>
+
+  <!-- ── Header ───────────────────────────────────────────────────────────── -->
+  <header class="site-header">
+    <h1>
+      🔒 SafeCity SP
+      <span class="badge">Beta</span>
+    </h1>
+
+    <!-- Filtros globais — aplicados a todos os gráficos simultaneamente -->
+    <div class="filters">
+      <div class="filter-group">
+        <label for="filter-ano">Ano</label>
+        <select id="filter-ano">
+          <option value="">Todos os anos</option>
+          <!-- Anos populados dinamicamente pelo dashboard.js após carregar os dados -->
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="filter-tipo">Tipo de crime</label>
+        <select id="filter-tipo">
+          <option value="">Furto + Roubo</option>
+          <option value="Furto">Furto</option>
+          <option value="Roubo">Roubo</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="filter-bairro">Bairro (SP)</label>
+        <select id="filter-bairro">
+          <option value="">Todos os bairros</option>
+          <!-- Bairros populados dinamicamente pelo dashboard.js após carregar os dados -->
+        </select>
+      </div>
+    </div>
+
+    <span class="header-meta" id="meta-periodo">Carregando...</span>
+  </header>
+
+  <!-- ── Banner de erro ───────────────────────────────────────────────────── -->
+  <div id="error-banner" class="error-banner" style="margin:1rem;"></div>
+
+  <!-- ── Dashboard principal ──────────────────────────────────────────────── -->
+  <main class="dashboard">
+
+    <!-- KPI Cards -->
+    <section class="kpi-grid">
+      <div class="kpi-card total">
+        <span class="label">Total de Ocorrências</span>
+        <span class="value" id="kpi-total">—</span>
+        <span class="sub">Furtos + Roubos de celular</span>
+      </div>
+      <div class="kpi-card furto">
+        <span class="label">Furtos</span>
+        <span class="value" id="kpi-furto">—</span>
+        <span class="sub">Sem violência (art. 155)</span>
+      </div>
+      <div class="kpi-card roubo">
+        <span class="label">Roubos</span>
+        <span class="value" id="kpi-roubo">—</span>
+        <span class="sub">Com violência (art. 157)</span>
+      </div>
+      <div class="kpi-card yoy" id="card-yoy">
+        <span class="label">Variação YoY</span>
+        <span class="value" id="kpi-yoy">—</span>
+        <span class="sub">Vs. ano anterior</span>
+      </div>
+    </section>
+
+    <!-- Linha 1: Evolução anual (full width) -->
+    <section class="chart-row cols-1">
+      <div class="chart-card">
+        <h2>Evolução Anual — Furto vs Roubo (2017–2026)</h2>
+        <div id="chart-anual" class="plot-container"></div>
+      </div>
+    </section>
+
+    <!-- Linha 2: Sazonalidade mensal + Furto vs Roubo donut -->
+    <section class="chart-row cols-2-1">
+      <div class="chart-card">
+        <h2>Sazonalidade Mensal</h2>
+        <div id="chart-mensal" class="plot-container"></div>
+      </div>
+      <div class="chart-card">
+        <h2>Furto vs Roubo</h2>
+        <div id="chart-tipo" class="plot-container"></div>
+      </div>
+    </section>
+
+    <!-- Linha 3: Distribuição horária (full width) -->
+    <section class="chart-row cols-1">
+      <div class="chart-card">
+        <h2>Distribuição por Hora do Dia — Madrugada · Manhã · Tarde · Noite</h2>
+        <div id="chart-horario" class="plot-container"></div>
+      </div>
+    </section>
+
+    <!-- Linha 4: Top marcas + Tipos de local -->
+    <section class="chart-row cols-2">
+      <div class="chart-card">
+        <h2>Top 10 Marcas de Celular Subtraídas</h2>
+        <div id="chart-marcas" class="plot-container"></div>
+      </div>
+      <div class="chart-card">
+        <h2>Top 8 Tipos de Local</h2>
+        <div id="chart-locais" class="plot-container"></div>
+      </div>
+    </section>
+
+    <!-- Linha 5: Ranking de municípios + Ranking de bairros (SP) -->
+    <section class="chart-row cols-2">
+
+      <div class="chart-card">
+        <h2>Top 20 Municípios com mais Ocorrências</h2>
+        <div class="table-scroll">
+          <table class="ranking-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Município</th>
+                <th>Ocorrências</th>
+              </tr>
+            </thead>
+            <tbody id="tabela-municipios">
+              <tr><td colspan="3" style="color:#64748b;padding:1rem;">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h2>Top 20 Bairros — São Paulo Capital</h2>
+        <div class="table-scroll">
+          <table class="ranking-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Bairro</th>
+                <th>Ocorrências</th>
+              </tr>
+            </thead>
+            <tbody id="tabela-bairros">
+              <tr><td colspan="3" style="color:#64748b;padding:1rem;">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ── Footer ───────────────────────────────────────────────────────────── -->
+  <footer class="site-footer">
+    <p>
+      Dados: <a href="https://www.ssp.sp.gov.br/estatistica/consultas" target="_blank" rel="noopener">
+        Secretaria de Segurança Pública de SP
+      </a>
+      &nbsp;·&nbsp;
+      Processamento: PySpark + Supabase
+      &nbsp;·&nbsp;
+      Código-fonte: <a href="https://github.com/igorqv/safecity" target="_blank" rel="noopener">GitHub</a>
+    </p>
+    <p style="margin-top:0.4rem;">
+      Os dados são públicos e de responsabilidade da SSP-SP. Este dashboard é uma iniciativa independente de visualização.
+    </p>
+  </footer>
+
+  <!-- dashboard.js carregado ao final para garantir que o DOM esteja pronto -->
+  <script src="js/dashboard.js"></script>
+
+</body>
+</html>

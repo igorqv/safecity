@@ -113,8 +113,9 @@ async function carregarDados() {
  */
 function lerFiltros() {
   return {
-    ano:  document.getElementById('filter-ano').value,   // '' = todos os anos
-    tipo: document.getElementById('filter-tipo').value,  // '' = furto + roubo
+    ano:    document.getElementById('filter-ano').value,      // '' = todos os anos
+    tipo:   document.getElementById('filter-tipo').value,     // '' = furto + roubo
+    bairro: document.getElementById('filter-bairro').value,   // '' = todos os bairros
   };
 }
 
@@ -123,10 +124,11 @@ function lerFiltros() {
  * Função pura — não modifica o array original.
  * Cada condição só é aplicada se o filtro não for vazio ('').
  */
-function filtrar(registros, { ano, tipo }) {
+function filtrar(registros, { ano, tipo, bairro }) {
   return registros.filter(r => {
-    if (ano  && String(r.ano) !== ano)   return false;
-    if (tipo && r.tipo_crime !== tipo)   return false;
+    if (ano    && String(r.ano) !== ano)     return false;
+    if (tipo   && r.tipo_crime !== tipo)     return false;
+    if (bairro && r.bairro !== bairro)       return false;
     return true;
   });
 }
@@ -422,7 +424,7 @@ function renderizarTodos(modo = 'new') {
   renderBairros(filtros);
 }
 
-// ── Inicialização do dropdown de anos ─────────────────────────────────────────
+// ── Inicialização dos dropdowns ──────────────────────────────────────────────
 function popularFiltroAnos() {
   const select = document.getElementById('filter-ano');
   // Manter o option "Todos" e inserir os anos em ordem decrescente (mais recente primeiro)
@@ -434,9 +436,22 @@ function popularFiltroAnos() {
   });
 }
 
+function popularFiltroBairros() {
+  const select = document.getElementById('filter-bairro');
+  // Extrair bairros únicos da tabela kpi_by_bairro
+  const bairrosUnicos = [...new Set(kpis.bairro.map(r => r.bairro))].sort();
+
+  bairrosUnicos.forEach(bairro => {
+    const opt = document.createElement('option');
+    opt.value = bairro;
+    opt.textContent = bairro;
+    select.appendChild(opt);
+  });
+}
+
 // ── Event listeners dos filtros ────────────────────────────────────────────────
 function configurarFiltros() {
-  ['filter-ano', 'filter-tipo'].forEach(id => {
+  ['filter-ano', 'filter-tipo', 'filter-bairro'].forEach(id => {
     document.getElementById(id).addEventListener('change', () => {
       // 'react' reutiliza os elementos DOM existentes — evita flicker e é mais rápido
       // que recriar os gráficos com newPlot a cada mudança de filtro
@@ -458,6 +473,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     loading.classList.add('hidden');
 
     popularFiltroAnos();
+    popularFiltroBairros();
     configurarFiltros();
 
     // Primeira renderização com newPlot — cria os elementos Plotly no DOM
