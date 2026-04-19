@@ -17,6 +17,7 @@ Saída: parquet/clean/ (particionado por ANO)
 import os
 import sys
 from pathlib import Path
+from typing import Optional
 
 os.environ.setdefault("PYSPARK_SUBMIT_ARGS", "pyspark-shell")
 
@@ -258,6 +259,12 @@ def main() -> None:
 
     print(f"\nLendo Parquet bruto de: {PARQUET_RAW}")
     df = spark.read.parquet(str(PARQUET_RAW))
+
+    # Filtrar por ano se especificado via variável de ambiente (para processamento incremental)
+    ano_filtro = os.getenv("SAFECITY_YEAR")
+    if ano_filtro:
+        print(f"Filtrando por ano: {ano_filtro}")
+        df = df.filter(F.col("ANO") == int(ano_filtro))
 
     total_bruto = df.count()
     print(f"Total de linhas brutas: {total_bruto:,}")
