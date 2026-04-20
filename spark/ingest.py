@@ -151,6 +151,14 @@ def ler_xlsx_como_pandas(caminho: Path) -> pd.DataFrame:
     # diferente de None; vamos padronizar depois no clean.py
     pdf = pdf.fillna("")
 
+    # Arquivos 2025+ não têm colunas ANO/MES — derivar de DATA_OCORRENCIA_BO.
+    # Sem isso, essas linhas vão para ANO=__HIVE_DEFAULT_PARTITION__ no Parquet
+    # e o filtro por ano no pipeline incremental não as encontra.
+    if pdf["ANO"].eq("").all():
+        datas = pd.to_datetime(pdf["DATA_OCORRENCIA_BO"], errors="coerce")
+        pdf["ANO"] = datas.dt.year.astype("Int64").astype(str).where(datas.notna(), "")
+        pdf["MES"] = datas.dt.month.astype("Int64").astype(str).where(datas.notna(), "")
+
     # Adicionar coluna de rastreabilidade para debugging de qualidade de dados.
     # Ex: se um bairro aparece errado, sabemos exatamente de qual arquivo veio.
     pdf["ARQUIVO_ORIGEM"] = caminho.name

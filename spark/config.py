@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 
 # Carregar .env a partir da raiz do projeto (um nível acima de spark/)
 # MOTIVO: .env fica na raiz do projeto, não dentro de spark/
-_RAIZ = Path(__file__).parent.parent
+_RAIZ = Path(__file__).resolve().parent.parent
 load_dotenv(_RAIZ / ".env")
 
 
