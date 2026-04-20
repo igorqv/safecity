@@ -1,5 +1,12 @@
 {
-  "buildCommand": "echo 'Static site'",
+  "buildCommand": "echo 'No build'",
   "outputDirectory": "web",
-  "public": true
+  "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/index.html",
+      "permanent": false
+    }
+  ]
 }
