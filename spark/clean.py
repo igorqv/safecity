@@ -179,6 +179,37 @@ def normalizar_marca(df: DataFrame) -> DataFrame:
     return df
 
 
+def normalizar_bairro(df: DataFrame) -> DataFrame:
+    """
+    Normaliza BAIRRO: remove acentos, força maiúsculas e expande abreviações.
+
+    Sem isso, 'CONSOLAÇÃO' e 'CONSOLACAO', 'JD SAO LUIZ' e 'JARDIM SAO LUIZ'
+    aparecem como bairros diferentes nos KPIs — fragmentando o ranking.
+    """
+    # translate faz substituição char-a-char em uma única passagem (eficiente no Spark)
+    ACENTOS_FROM = "ÀÁÂÃÄÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÇàáâãäèéêëìíîïòóôõöùúûüç"
+    ACENTOS_TO   = "AAAAAEEEEIIIIOOOOOUUUUCAAAAAEEEEIIIIOOOOOUUUUC"
+
+    # Abreviações típicas dos dados da SSP-SP (com \b para word boundary)
+    ABREVIACOES = [
+        (r"\bJD\b",  "JARDIM"),
+        (r"\bPQ\b",  "PARQUE"),
+        (r"\bVL\b",  "VILA"),
+        (r"\bCH\b",  "CHACARA"),
+        (r"\bST\b",  "SETOR"),
+    ]
+
+    normalizado = F.upper(F.translate(F.col("BAIRRO"), ACENTOS_FROM, ACENTOS_TO))
+    for padrao, expansao in ABREVIACOES:
+        normalizado = F.regexp_replace(normalizado, padrao, expansao)
+
+    # Preserva null (bairros desconhecidos não viram string vazia)
+    return df.withColumn(
+        "BAIRRO",
+        F.when(F.col("BAIRRO").isNull(), None).otherwise(normalizado)
+    )
+
+
 def derivar_periodo(df: DataFrame) -> DataFrame:
     """
     Deriva o período do dia a partir da hora da ocorrência.
@@ -280,6 +311,7 @@ def main() -> None:
     print("\nAplicando transformações...")
     df = cast_tipos(df)
     df = limpar_strings(df)
+    df = normalizar_bairro(df)
     df = normalizar_tipo_crime(df)
     df = normalizar_marca(df)
     df = derivar_periodo(df)
