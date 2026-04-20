@@ -103,6 +103,12 @@ async function carregarDados() {
 
   // Descobrir anos disponíveis a partir dos dados reais
   anosDisponiveis = [...new Set(kpis.annual.map(r => r.ano))].sort();
+
+  // Validação: garantir que os dados foram realmente carregados
+  if (kpis.annual.length === 0) {
+    throw new Error('Nenhum dado encontrado no Supabase. Verifique se as tabelas foram criadas e populadas no schema.sql');
+  }
+
   return kpis;
 }
 
