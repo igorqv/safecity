@@ -78,6 +78,40 @@ async function fetchTabela(nome) {
   return res.json();
 }
 
+/**
+ * Calcula variacao_yoy_pct por tipo_crime no frontend.
+ * Necessário porque o pipeline Spark processa anos isoladamente,
+ * então a Window function não consegue acessar o ano anterior.
+ * Função pura — retorna novo array sem mutar o original.
+ */
+function calcularYoY(registros) {
+  // Agrupar por tipo_crime para comparar anos dentro do mesmo tipo
+  const grupos = {};
+  registros.forEach(r => {
+    const tipo = r.tipo_crime || '__sem_tipo__';
+    if (!grupos[tipo]) grupos[tipo] = [];
+    grupos[tipo].push(r);
+  });
+
+  const resultado = [];
+  Object.values(grupos).forEach(grupo => {
+    // Ordenar por ano dentro de cada grupo antes de iterar
+    const ordenado = [...grupo].sort((a, b) => a.ano - b.ano);
+    ordenado.forEach((r, i) => {
+      const prev = ordenado[i - 1];
+      const total = r.total_ocorrencias || r.total || 0;
+      const totalPrev = prev ? (prev.total_ocorrencias || prev.total || 0) : null;
+      resultado.push({
+        ...r,
+        variacao_yoy_pct: (prev && totalPrev)
+          ? ((total - totalPrev) / totalPrev) * 100
+          : null,  // primeiro ano de cada tipo não tem referência anterior
+      });
+    });
+  });
+  return resultado;
+}
+
 async function carregarDados() {
   // Se dados mock estão disponíveis (test.html), usá-los em vez de fazer fetch real
   if (window.MOCK_DATA) {
@@ -100,6 +134,10 @@ async function carregarDados() {
 
     kpis = { annual, monthly, municipality, bairro, location, brand, hour, period };
   }
+
+  // Calcular variacao_yoy_pct no frontend porque o pipeline Spark processa
+  // anos isoladamente — a Window function não enxerga o ano anterior
+  kpis.annual = calcularYoY(kpis.annual);
 
   // Descobrir anos disponíveis a partir dos dados reais
   anosDisponiveis = [...new Set(kpis.annual.map(r => r.ano))].sort();
@@ -134,7 +172,9 @@ function filtrar(registros, { ano, tipo, bairro }) {
   return registros.filter(r => {
     if (ano    && String(r.ano) !== ano)     return false;
     if (tipo   && r.tipo_crime !== tipo)     return false;
-    if (bairro && r.bairro !== bairro)       return false;
+    // Só aplica o filtro de bairro quando o registro tem esse campo —
+    // tabelas como annual/monthly não têm bairro e não devem ser zeradas
+    if (bairro && r.hasOwnProperty('bairro') && r.bairro !== bairro) return false;
     return true;
   });
 }
@@ -484,6 +524,22 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     // Primeira renderização com newPlot — cria os elementos Plotly no DOM
     renderizarTodos('new');
+
+    // Click-to-filter: clicar numa barra/fatia filtra todos os outros gráficos.
+    // Usa o event system do Plotly (disponível após newPlot criar o elemento).
+    // chart-anual: bar chart — o ano está em pt.x
+    document.getElementById('chart-anual').on('plotly_click', (data) => {
+      const pt = data.points[0];
+      document.getElementById('filter-ano').value = String(pt.x);
+      renderizarTodos('react');
+    });
+
+    // chart-tipo: pie/donut — o tipo de crime está em pt.label
+    document.getElementById('chart-tipo').on('plotly_click', (data) => {
+      const pt = data.points[0];
+      document.getElementById('filter-tipo').value = pt.label;
+      renderizarTodos('react');
+    });
 
     // Atualizar metadado de "última atualização" na UI
     const ultimoAno = Math.max(...anosDisponiveis);
