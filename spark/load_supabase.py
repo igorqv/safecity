@@ -10,6 +10,7 @@ Por que usar o cliente supabase-py em vez de SQLAlchemy/psycopg2?
   - Não precisamos de JDBC JAR nem driver PostgreSQL instalado no sistema
 """
 
+import os
 import sys
 import math
 from pathlib import Path
@@ -40,22 +41,22 @@ def conectar() -> Client:
     return create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
 
 
-def truncar_tabela(supabase: Client, tabela: str) -> None:
-    """
-    Remove todos os registros da tabela antes da carga.
+def deletar_ano(supabase: Client, tabela: str, ano: int) -> None:
+    """Remove apenas os registros do ano especificado antes de reinserir."""
+    supabase.table(tabela).delete().eq("ano", ano).execute()
 
-    Por que DELETE em vez de TRUNCATE via REST?
-      A REST API do Supabase não expõe TRUNCATE diretamente.
-      DELETE com filtro 'id > 0' remove todas as linhas preservando
-      o schema, índices e constraints definidos no schema.sql.
-    """
-    # Deletar onde id > 0 — como todas as linhas têm id SERIAL > 0, remove tudo
+
+def deletar_tudo(supabase: Client, tabela: str) -> None:
+    """Remove todos os registros da tabela (usado quando não há filtro de ano)."""
     supabase.table(tabela).delete().gt("id", 0).execute()
 
 
-def carregar_kpi(supabase: Client, nome_tabela: str) -> int:
+def carregar_kpi(supabase: Client, nome_tabela: str, ano_filtro: int | None) -> int:
     """
     Lê o Parquet do KPI e insere na tabela Supabase em batches.
+
+    Se ano_filtro for fornecido, apaga apenas os dados daquele ano antes de inserir,
+    preservando os outros anos já carregados no Supabase.
 
     Retorna o número de linhas inseridas.
     """
@@ -72,23 +73,21 @@ def carregar_kpi(supabase: Client, nome_tabela: str) -> int:
         print(f"  AVISO {nome_tabela}: Parquet vazio — pulando")
         return 0
 
-    # Converter para lista de dicts — formato esperado pelo supabase-py
     registros = pdf.to_dict(orient="records")
 
-    # Limpar valores NaN/NaT que o JSON não consegue serializar
-    # MOTIVO: pandas usa float NaN para nulos numéricos, mas JSON só entende null
     for r in registros:
         for k, v in r.items():
             if isinstance(v, float) and math.isnan(v):
                 r[k] = None
-            # Converter numpy int/float para tipos Python nativos para serialização JSON
             elif hasattr(v, 'item'):
                 r[k] = v.item()
 
-    # Truncar antes de inserir — garante idempotência (rodar duas vezes não duplica)
-    truncar_tabela(supabase, nome_tabela)
+    # Apagar apenas o ano que será reinserido — preserva outros anos no Supabase
+    if ano_filtro:
+        deletar_ano(supabase, nome_tabela, ano_filtro)
+    else:
+        deletar_tudo(supabase, nome_tabela)
 
-    # Inserir em batches
     for i in range(0, len(registros), BATCH_SIZE):
         batch = registros[i:i + BATCH_SIZE]
         supabase.table(nome_tabela).insert(batch).execute()
@@ -110,13 +109,18 @@ def main() -> None:
     supabase = conectar()
     print(f"\nConexão estabelecida: {SUPABASE_URL}")
 
+    ano_filtro = os.getenv("SAFECITY_YEAR")
+    ano_int = int(ano_filtro) if ano_filtro else None
+    if ano_int:
+        print(f"Modo incremental: carregando apenas ano {ano_int}")
+
     total_linhas = 0
     resultados = []
 
     for chave, nome_tabela in TABELAS_KPI.items():
         print(f"\n-> {nome_tabela}")
         try:
-            n = carregar_kpi(supabase, nome_tabela)
+            n = carregar_kpi(supabase, nome_tabela, ano_int)
             total_linhas += n
             resultados.append((nome_tabela, n, "OK"))
             print(f"  OK {n:,} linhas inseridas")
