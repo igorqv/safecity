@@ -144,15 +144,15 @@ const fmt = n => Number(n).toLocaleString('pt-BR');
 const fmtPct = n => n == null ? '—' : `${n > 0 ? '+' : ''}${Number(n).toFixed(1)}%`;
 
 // Normalizar campo de contagem — diferentes tabelas usam nomes diferentes
-const getTotal = r => getTotal(r)_ocorrencias || getTotal(r) || 0;
+const getTotal = r => r.total_ocorrencias || r.total || 0;
 
 // ── KPI Cards ──────────────────────────────────────────────────────────────────
 function atualizarCards(filtros) {
   const dados = filtrar(kpis.annual, filtros);
 
-  const total  = dados.reduce((s, r) => s + (getTotal(r)_ocorrencias || 0), 0);
-  const furtos = dados.reduce((s, r) => s + (getTotal(r)_furtos || 0), 0);
-  const roubos = dados.reduce((s, r) => s + (getTotal(r)_roubos || 0), 0);
+  const total  = dados.reduce((s, r) => s + getTotal(r), 0);
+  const furtos = dados.filter(r => r.tipo_crime === 'Furto').reduce((s, r) => s + getTotal(r), 0);
+  const roubos = dados.filter(r => r.tipo_crime === 'Roubo').reduce((s, r) => s + getTotal(r), 0);
 
   // Variação YoY: usar o último ano disponível (mais relevante para o usuário)
   const anoReferencia = filtros.ano
