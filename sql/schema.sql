@@ -104,6 +104,28 @@ CREATE TABLE IF NOT EXISTS kpi_by_period (
     UNIQUE (ano, periodo, tipo_crime)
 );
 
+-- ── Permissões de leitura pública ─────────────────────────────────────────────
+-- Dados da SSP-SP são públicos por lei — qualquer pessoa pode consultar.
+-- Desativar RLS e conceder SELECT ao role anon (usado pelo dashboard via anon key).
+
+ALTER TABLE kpi_annual_summary   DISABLE ROW LEVEL SECURITY;
+ALTER TABLE kpi_monthly          DISABLE ROW LEVEL SECURITY;
+ALTER TABLE kpi_by_municipality  DISABLE ROW LEVEL SECURITY;
+ALTER TABLE kpi_by_bairro        DISABLE ROW LEVEL SECURITY;
+ALTER TABLE kpi_by_location_type DISABLE ROW LEVEL SECURITY;
+ALTER TABLE kpi_by_brand         DISABLE ROW LEVEL SECURITY;
+ALTER TABLE kpi_by_hour          DISABLE ROW LEVEL SECURITY;
+ALTER TABLE kpi_by_period        DISABLE ROW LEVEL SECURITY;
+
+GRANT SELECT ON kpi_annual_summary   TO anon;
+GRANT SELECT ON kpi_monthly          TO anon;
+GRANT SELECT ON kpi_by_municipality  TO anon;
+GRANT SELECT ON kpi_by_bairro        TO anon;
+GRANT SELECT ON kpi_by_location_type TO anon;
+GRANT SELECT ON kpi_by_brand         TO anon;
+GRANT SELECT ON kpi_by_hour          TO anon;
+GRANT SELECT ON kpi_by_period        TO anon;
+
 -- ── Confirmar criação ──────────────────────────────────────────────────────────
 SELECT table_name
 FROM information_schema.tables

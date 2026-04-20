@@ -1,12 +1,3 @@
 {
-  "buildCommand": "echo 'No build'",
-  "outputDirectory": "web",
-  "trailingSlash": false,
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "/index.html",
-      "permanent": false
-    }
-  ]
+  "outputDirectory": "web"
 }
